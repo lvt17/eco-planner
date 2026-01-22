@@ -1,11 +1,16 @@
 // API Configuration
-let rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-// Ensure protocol exists
-if (!rawBaseUrl.startsWith('http')) {
-    rawBaseUrl = `https://${rawBaseUrl}`;
-}
-// Strip trailing /api or /api/ to prevent /api/api double prefixing
-const API_BASE_URL = rawBaseUrl.replace(/\/api\/?$/, '');
+let rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3001').trim();
+
+// 1. Remove any existing protocols to start fresh
+rawBaseUrl = rawBaseUrl.replace(/^https?:\/\//, '');
+
+// 2. Strip trailing /api or /api/
+rawBaseUrl = rawBaseUrl.replace(/\/api\/?$/, '');
+
+// 3. Add single https protocol
+const API_BASE_URL = `https://${rawBaseUrl}`;
+
+console.log('📡 API Base URL configured:', API_BASE_URL);
 
 interface RequestOptions extends RequestInit {
     skipAuth?: boolean;
