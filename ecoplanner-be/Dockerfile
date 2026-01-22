@@ -3,9 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copy package files from ecoplanner-be
+COPY ecoplanner-be/package*.json ./
+COPY ecoplanner-be/prisma ./prisma/
 
 # Install dependencies
 RUN npm ci
@@ -14,7 +14,8 @@ RUN npm ci
 RUN npx prisma generate
 
 # Copy source code
-COPY . .
+COPY ecoplanner-be/src ./src
+COPY ecoplanner-be/tsconfig.json ./
 
 # Build TypeScript
 RUN npm run build
@@ -25,8 +26,8 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY ecoplanner-be/package*.json ./
+COPY ecoplanner-be/prisma ./prisma/
 
 # Install production dependencies only
 RUN npm ci --only=production
