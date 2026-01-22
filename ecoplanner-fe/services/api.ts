@@ -1,5 +1,9 @@
 // API Configuration
-const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+let rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Ensure protocol exists
+if (!rawBaseUrl.startsWith('http')) {
+    rawBaseUrl = `https://${rawBaseUrl}`;
+}
 // Strip trailing /api or /api/ to prevent /api/api double prefixing
 const API_BASE_URL = rawBaseUrl.replace(/\/api\/?$/, '');
 
