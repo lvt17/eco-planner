@@ -1,0 +1,5 @@
+Bank: NCB
+Card Number: 9704198526191432198
+Cardholder Name: Nguyễn Văn A
+Expiry Date: 07/15
+OTP: 123456

@@ -212,23 +212,24 @@ class ApiClient {
     }
 }
 
+// Minimal fallback settings - real defaults come from backend
 export const DEFAULT_SETTINGS: SystemSettings = {
     branding: {
-        facebook: 'https://facebook.com',
-        instagram: 'https://instagram.com',
-        hotline: '1900 1234'
+        facebook: '',
+        instagram: '',
+        hotline: ''
     },
     ai: {
-        greeting: 'Chào mừng bạn đến với MEDE! Tôi có thể giúp gì cho bạn?'
+        greeting: 'Xin chào! Tôi có thể giúp gì cho bạn?'
     },
     payment: {
-        bankName: 'Vietcombank',
-        accountNumber: '1234567890',
-        accountHolder: 'ECO PLANNER',
-        transferContent: 'THANH TOAN DON HANG'
+        bankName: '',
+        accountNumber: '',
+        accountHolder: '',
+        transferContent: 'THANH TOAN {orderId}'
     },
     seo: {
-        metaDescription: 'ECO PLANNER - Planner cao cấp cho cuộc sống cân bằng'
+        metaDescription: 'ECO PLANNER - Planner và văn phòng phẩm thân thiện môi trường'
     }
 };
 
