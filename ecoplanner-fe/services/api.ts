@@ -187,13 +187,50 @@ class ApiClient {
 
     // Settings
     async getSettings() {
-        return this.request<SystemSettings>('/api/settings', { skipAuth: true });
+        try {
+            const data = await this.request<SystemSettings>('/api/settings', { skipAuth: true });
+            return this.mergeWithDefaults(data);
+        } catch (error) {
+            console.error('Failed to fetch settings, using defaults:', error);
+            return DEFAULT_SETTINGS;
+        }
+    }
+
+    private mergeWithDefaults(data: Partial<SystemSettings>): SystemSettings {
+        return {
+            ...DEFAULT_SETTINGS,
+            ...data,
+            branding: { ...DEFAULT_SETTINGS.branding, ...data.branding },
+            ai: { ...DEFAULT_SETTINGS.ai, ...data.ai },
+            payment: { ...DEFAULT_SETTINGS.payment, ...data.payment },
+            seo: { ...DEFAULT_SETTINGS.seo, ...data.seo }
+        };
     }
 
     async updateSettings(data: Partial<SystemSettings>) {
         return this.request<SystemSettings>('/api/settings', { method: 'PATCH', body: JSON.stringify(data) });
     }
 }
+
+export const DEFAULT_SETTINGS: SystemSettings = {
+    branding: {
+        facebook: 'https://facebook.com',
+        instagram: 'https://instagram.com',
+        hotline: '1900 1234'
+    },
+    ai: {
+        greeting: 'Chào mừng bạn đến với MEDE! Tôi có thể giúp gì cho bạn?'
+    },
+    payment: {
+        bankName: 'Vietcombank',
+        accountNumber: '1234567890',
+        accountHolder: 'ECO PLANNER',
+        transferContent: 'THANH TOAN DON HANG'
+    },
+    seo: {
+        metaDescription: 'ECO PLANNER - Planner cao cấp cho cuộc sống cân bằng'
+    }
+};
 
 // Types
 export interface User {

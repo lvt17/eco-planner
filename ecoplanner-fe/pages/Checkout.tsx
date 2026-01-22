@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ShieldCheck, Loader2, CreditCard, Truck, Landmark } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { api, ShippingAddress, SystemSettings } from '../services/api';
+import { api, ShippingAddress, SystemSettings, DEFAULT_SETTINGS } from '../services/api';
 
 type PaymentMethod = 'VNPAY' | 'COD' | 'BANK';
 
@@ -17,7 +17,7 @@ const Checkout: React.FC = () => {
     const { items, totalPrice, clearCart } = useCart();
     const { user, isAuthenticated } = useAuth();
     const [step, setStep] = useState(1);
-    const [settings, setSettings] = useState<SystemSettings | null>(null);
+    const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
     const [formData, setFormData] = useState<ShippingAddress>({
         name: '',
         phone: '',
@@ -169,9 +169,24 @@ const Checkout: React.FC = () => {
     const handleSubmitInfo = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.phone || !formData.address || !formData.city) {
-            setError('Vui lòng điền đầy đủ thông tin');
+            setError('Vui lòng điền đầy đủ thông tin bắt buộc');
             return;
         }
+
+        // Validate district and ward if location data is loaded and available
+        if (provinces.length > 0 && !formData.city) {
+            setError('Vui lòng chọn Tỉnh/Thành phố');
+            return;
+        }
+        if (districts.length > 0 && !formData.district) {
+            setError('Vui lòng chọn Quận/Huyện');
+            return;
+        }
+        if (wards.length > 0 && !formData.ward) {
+            setError('Vui lòng chọn Phường/Xã');
+            return;
+        }
+
         setError('');
         setStep(2);
     };
@@ -288,7 +303,7 @@ const Checkout: React.FC = () => {
                                             />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex flex-col gap-2 relative">
                                                 <label className="text-primary text-sm font-bold">Tỉnh / Thành *</label>
                                                 <select
                                                     name="city"
@@ -303,8 +318,11 @@ const Checkout: React.FC = () => {
                                                         <option key={p.code} value={p.name}>{p.name}</option>
                                                     ))}
                                                 </select>
+                                                {loadingLocations.provinces && (
+                                                    <Loader2 className="w-4 h-4 animate-spin absolute right-4 bottom-5 text-primary/40" />
+                                                )}
                                             </div>
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex flex-col gap-2 relative">
                                                 <label className="text-primary text-sm font-bold">Quận / Huyện</label>
                                                 <select
                                                     name="district"
@@ -320,8 +338,11 @@ const Checkout: React.FC = () => {
                                                         <option key={d.code} value={d.name}>{d.name}</option>
                                                     ))}
                                                 </select>
+                                                {loadingLocations.districts && (
+                                                    <Loader2 className="w-4 h-4 animate-spin absolute right-4 bottom-5 text-primary/40" />
+                                                )}
                                             </div>
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex flex-col gap-2 relative">
                                                 <label className="text-primary text-sm font-bold">Phường / Xã</label>
                                                 <select
                                                     name="ward"
@@ -337,6 +358,9 @@ const Checkout: React.FC = () => {
                                                         <option key={w.code} value={w.name}>{w.name}</option>
                                                     ))}
                                                 </select>
+                                                {loadingLocations.wards && (
+                                                    <Loader2 className="w-4 h-4 animate-spin absolute right-4 bottom-5 text-primary/40" />
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -407,17 +431,17 @@ const Checkout: React.FC = () => {
                                                 <div className="flex-1 w-full space-y-4">
                                                     <div className="flex justify-between items-center text-sm">
                                                         <span className="text-primary/60">Ngân hàng</span>
-                                                        <span className="text-primary font-bold">{settings?.payment?.bankName || 'Vietcombank'}</span>
+                                                        <span className="text-primary font-bold">{settings.payment.bankName}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-sm">
                                                         <span className="text-primary/60">Số tài khoản</span>
-                                                        <span className="text-primary font-bold">{settings?.payment?.accountNumber || '1234567890'}</span>
+                                                        <span className="text-primary font-bold">{settings.payment.accountNumber}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-sm">
                                                         <span className="text-primary/60">Chủ tài khoản</span>
-                                                        <span className="text-primary font-bold uppercase">{settings?.payment?.accountHolder || 'ECO PLANNER'}</span>
+                                                        <span className="text-primary font-bold uppercase">{settings.payment.accountHolder}</span>
                                                     </div>
-                                                    {settings?.payment?.branch && (
+                                                    {settings.payment.branch && (
                                                         <div className="flex justify-between items-center text-sm">
                                                             <span className="text-primary/60">Chi nhánh</span>
                                                             <span className="text-primary font-bold">{settings.payment.branch}</span>
@@ -430,7 +454,7 @@ const Checkout: React.FC = () => {
                                                 </div>
 
                                                 {/* QR Code */}
-                                                {settings?.payment?.qrCode && (
+                                                {settings.payment.qrCode && (
                                                     <div className="w-40 flex flex-col items-center gap-2">
                                                         <div className="w-full aspect-square bg-white p-2 rounded-2xl shadow-sm border border-primary/5 overflow-hidden">
                                                             <img src={settings.payment.qrCode.startsWith('http') ? settings.payment.qrCode : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${settings.payment.qrCode}`} className="w-full h-full object-contain" alt="QR Code" />
@@ -443,7 +467,7 @@ const Checkout: React.FC = () => {
                                             <div className="p-4 bg-white border border-dashed border-primary/30 rounded-2xl">
                                                 <p className="text-xs text-primary/60 mb-1">Nội dung chuyển khoản:</p>
                                                 <p className="font-bold text-primary text-lg">
-                                                    {(settings?.payment?.transferContent || "MEDE {orderId}").replace('{orderId}', '(Mã đơn của bạn)')}
+                                                    {settings.payment.transferContent.replace('{orderId}', '(Mã đơn của bạn)')}
                                                 </p>
                                             </div>
                                             <p className="text-[11px] text-primary/40 italic">Đơn hàng sẽ được xử lý ngay sau khi hệ thống ghi nhận giao dịch thành công.</p>

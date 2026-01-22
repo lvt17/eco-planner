@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, MessageCircle, CreditCard, Search, Upload, Loader2, CheckCircle, Instagram, Facebook, Phone } from 'lucide-react';
-import { api, SystemSettings } from '../../services/api';
+import { api, SystemSettings, DEFAULT_SETTINGS } from '../../services/api';
 
 const Settings: React.FC = () => {
     const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -16,25 +16,17 @@ const Settings: React.FC = () => {
     const loadSettings = async () => {
         try {
             const data = await api.getSettings();
-            // Provide defaults if data is partial/empty to prevent crashes
-            const defaults: SystemSettings = {
-                branding: { facebook: '', instagram: '', hotline: '' },
-                ai: { greeting: '' },
-                payment: { bankName: '', accountNumber: '', accountHolder: '', transferContent: '' },
-                seo: { metaDescription: '' }
-            };
-            setSettings({
-                ...defaults,
-                ...data,
-                branding: { ...defaults.branding, ...data.branding },
-                ai: { ...defaults.ai, ...data.ai },
-                payment: { ...defaults.payment, ...data.payment },
-                seo: { ...defaults.seo, ...data.seo }
-            });
+            setSettings(data);
         } catch (error) {
             console.error('Failed to load settings:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleReset = () => {
+        if (window.confirm('Bạn có chắc chắn muốn đặt lại cài đặt về mặc định?')) {
+            setSettings(DEFAULT_SETTINGS);
         }
     };
 
@@ -94,15 +86,23 @@ const Settings: React.FC = () => {
                     <h1 className="text-2xl font-black text-charcoal">Cài đặt hệ thống</h1>
                     <p className="text-stone-500 text-sm">Quản lý cấu hình chung cho MEDE</p>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg ${saveStatus === 'success' ? 'bg-green-500 text-white' : 'bg-charcoal text-white hover:bg-black'
-                        }`}
-                >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveStatus === 'success' ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                    {saveStatus === 'success' ? 'Đã lưu' : 'Lưu cài đặt'}
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleReset}
+                        className="px-6 py-2.5 rounded-xl font-bold text-stone-500 hover:text-red-500 hover:bg-red-50 transition-all"
+                    >
+                        Đặt lại mặc định
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg ${saveStatus === 'success' ? 'bg-green-500 text-white' : 'bg-charcoal text-white hover:bg-black'
+                            }`}
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveStatus === 'success' ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        {saveStatus === 'success' ? 'Đã lưu' : 'Lưu cài đặt'}
+                    </button>
+                </div>
             </div>
 
             <div className="flex gap-2 mb-8 bg-stone-100 p-1.5 rounded-2xl w-fit">
