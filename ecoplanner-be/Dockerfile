@@ -16,8 +16,9 @@ RUN npm ci
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code
+# Copy source code and seed file
 COPY ecoplanner-be/src ./src
+COPY ecoplanner-be/prisma/seed.ts ./prisma/seed.ts
 COPY ecoplanner-be/tsconfig.json ./
 
 # Build TypeScript
