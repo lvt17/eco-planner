@@ -26,6 +26,12 @@ interface PaymentResult {
     error?: string;
 }
 
+interface MomoResponse {
+    resultCode: number;
+    payUrl?: string;
+    message?: string;
+}
+
 class PaymentService {
     private vnpay: VNPay | null = null;
 
@@ -84,7 +90,7 @@ class PaymentService {
                 body: JSON.stringify(requestBody),
             });
 
-            const data = await response.json();
+            const data = await response.json() as MomoResponse;
 
             if (data.resultCode === 0) {
                 return { success: true, payUrl: data.payUrl, orderId, message: data.message };
@@ -149,7 +155,8 @@ class PaymentService {
         }
 
         try {
-            const result = this.vnpay.verifyReturnUrl(query);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result = this.vnpay.verifyReturnUrl(query as any);
             return {
                 isValid: result.isVerified,
                 isSuccess: result.isSuccess,
