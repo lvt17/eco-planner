@@ -1,6 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+let rawSocketUrl = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001').trim();
+// Clean up URL: remove protocols and trailing slashes
+rawSocketUrl = rawSocketUrl.replace(/^https?:\/\//g, '').replace(/\/api\/?/g, '').replace(/\/$/, '');
+const SOCKET_URL = `https://${rawSocketUrl}`;
+
+console.log('🔌 Socket URL sanitized:', SOCKET_URL);
 
 class SocketService {
     private socket: Socket | null = null;
