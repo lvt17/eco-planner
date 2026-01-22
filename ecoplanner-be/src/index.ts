@@ -30,15 +30,10 @@ setupSocketHandlers(io);
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-const allowedOrigins = [config.frontendUrl];
-if (config.frontendUrl && !config.frontendUrl.startsWith('http')) {
-    allowedOrigins.push(`https://${config.frontendUrl}`);
-    allowedOrigins.push(`http://${config.frontendUrl}`);
-}
-
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.map(o => o.replace(/\/$/, '')).includes(origin)) {
+        // Allow if it matches our frontend URL (with or without protocol) or is a vercel preview/production domain
+        if (!origin || origin.includes('vercel.app') || origin.includes(config.frontendUrl.replace(/^https?:\/\//, ''))) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

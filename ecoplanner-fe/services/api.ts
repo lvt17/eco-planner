@@ -1,16 +1,13 @@
 // API Configuration
 let rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3001').trim();
 
-// 1. Remove any existing protocols to start fresh
-rawBaseUrl = rawBaseUrl.replace(/^https?:\/\//, '');
+// Clean up: remove all protocols and any /api occurrences to start from a clean slate
+rawBaseUrl = rawBaseUrl.replace(/^https?:\/\//g, '').replace(/\/api\/?/g, '');
 
-// 2. Strip trailing /api or /api/
-rawBaseUrl = rawBaseUrl.replace(/\/api\/?$/, '');
-
-// 3. Add single https protocol
+// Reconstruct correctly: Always https in production, no trailing /api (service calls add it)
 const API_BASE_URL = `https://${rawBaseUrl}`;
 
-console.log('📡 API Base URL configured:', API_BASE_URL);
+console.log('📡 API Base URL sanitized:', API_BASE_URL);
 
 interface RequestOptions extends RequestInit {
     skipAuth?: boolean;
