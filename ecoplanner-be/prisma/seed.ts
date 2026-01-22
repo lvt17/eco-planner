@@ -6,31 +6,28 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Seeding database...');
 
-    // Check if database is already seeded
-    const existingUsers = await prisma.user.count();
-    if (existingUsers > 0) {
-        console.log('✅ Database already seeded, skipping...');
-        return;
-    }
-
-    // Clear existing data (only runs if no users exist)
-    await prisma.orderItem.deleteMany({});
-    await prisma.order.deleteMany({});
-    await prisma.message.deleteMany({});
-    await prisma.conversation.deleteMany({});
-    await prisma.product.deleteMany({});
-    await prisma.user.deleteMany({});
-
-    // ============ USERS (10 users + 2 demo accounts) ============
+    // Ensuring admin accounts exist
     const hashedPassword = await bcrypt.hash('password123', 10);
     const adminPassword = await bcrypt.hash('admin123', 10);
     const userPassword = await bcrypt.hash('user123', 10);
 
-    const users = await Promise.all([
+    const demoUsers = await Promise.all([
         // Demo accounts
-        prisma.user.create({ data: { email: 'admin@gmail.com', password: adminPassword, name: 'Admin', role: Role.ADMIN } }),
-        prisma.user.create({ data: { email: 'user@gmail.com', password: userPassword, name: 'User Demo', role: Role.CUSTOMER } }),
-        // Regular users
+        prisma.user.upsert({ where: { email: 'admin@admin.com' }, update: {}, create: { email: 'admin@admin.com', password: adminPassword, name: 'Admin', role: Role.ADMIN } }),
+        prisma.user.upsert({ where: { email: 'admin@gmail.com' }, update: {}, create: { email: 'admin@gmail.com', password: adminPassword, name: 'Admin Gmail', role: Role.ADMIN } }),
+        prisma.user.upsert({ where: { email: 'user@gmail.com' }, update: {}, create: { email: 'user@gmail.com', password: userPassword, name: 'User Demo', role: Role.CUSTOMER } }),
+    ]);
+
+    console.log(`✅ Ensured ${demoUsers.length} demo/admin users exist`);
+
+    // Only skip the rest (products, orders, etc) if products already exist
+    const existingProducts = await prisma.product.count();
+    if (existingProducts > 0) {
+        console.log('✅ Products already exist, skipping further seeding...');
+        return;
+    }
+    // Regular users
+    const users = await Promise.all([
         prisma.user.create({ data: { email: 'nguyen.vana@gmail.com', password: hashedPassword, name: 'Nguyễn Văn A', role: Role.CUSTOMER } }),
         prisma.user.create({ data: { email: 'tran.thib@gmail.com', password: hashedPassword, name: 'Trần Thị B', role: Role.CUSTOMER } }),
         prisma.user.create({ data: { email: 'le.vanc@gmail.com', password: hashedPassword, name: 'Lê Văn C', role: Role.CUSTOMER } }),

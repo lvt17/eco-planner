@@ -20,6 +20,7 @@ import uploadRoutes from './controllers/uploads';
 import settingsRoutes from './controllers/settings';
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: { origin: config.frontendUrl, methods: ['GET', 'POST'], credentials: true },
