@@ -23,6 +23,7 @@ const AdminBlogEditor: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
 
     // Editor.js ref
@@ -41,13 +42,12 @@ const AdminBlogEditor: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        const init = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
             try {
                 const prods = await api.getProducts();
                 setProducts(prods);
 
-                let initialData = undefined;
                 if (id) {
                     const post = await api.request<BlogPost>(`/api/blogs/id/${id}`);
                     setTitle(post.title);
@@ -58,53 +58,71 @@ const AdminBlogEditor: React.FC = () => {
                     setType(post.type);
                     setSeoKeywords(post.seoKeywords || {});
                     setRelatedProductIds(post.relatedProductIds || []);
-                    initialData = post.content;
+                    (window as any)._initialEditorData = post.content;
+                } else {
+                    (window as any)._initialEditorData = undefined;
                 }
-
-                if (!editorInstance.current) {
-                    const editor = new EditorJS({
-                        holder: 'editorjs-container',
-                        data: initialData,
-                        tools: {
-                            header: {
-                                class: Header as any,
-                                inlineToolbar: true,
-                                config: { levels: [2, 3, 4], defaultLevel: 2 }
-                            },
-                            list: { class: List as any, inlineToolbar: true },
-                            quote: { class: QuoteTool as any, inlineToolbar: true },
-                            delimiter: Delimiter,
-                            inlineCode: InlineCode,
-                            table: Table,
-                            checklist: Checklist,
-                            marker: Marker,
-                            underline: Underline,
-                            image: {
-                                class: ImageTool as any,
-                                config: {
-                                    uploader: {
-                                        async uploadByFile(file: File) {
-                                            const { url } = await api.uploadFile(file);
-                                            return {
-                                                success: 1,
-                                                file: { url: url.startsWith('http') ? url : `${api.baseUrl}${url}` }
-                                            };
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        placeholder: 'Bắt đầu viết nội dung tuyệt vời của bạn tại đây...',
-                    });
-                    editorInstance.current = editor;
-                }
+                setIsDataLoaded(true);
             } catch (error) {
-                console.error('Failed to init editor:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-        init();
+        fetchData();
+    }, [id]);
+
+    useEffect(() => {
+        if (!isDataLoaded || editorInstance.current) return;
+
+        const initEditor = () => {
+            if (editorInstance.current) return;
+
+            const container = document.getElementById('editorjs-container');
+            if (!container) {
+                // If container not found, try again shortly
+                setTimeout(initEditor, 100);
+                return;
+            }
+
+            const editor = new EditorJS({
+                holder: 'editorjs-container',
+                data: (window as any)._initialEditorData,
+                tools: {
+                    header: {
+                        class: Header as any,
+                        inlineToolbar: true,
+                        config: { levels: [2, 3, 4], defaultLevel: 2 }
+                    },
+                    list: { class: List as any, inlineToolbar: true },
+                    quote: { class: QuoteTool as any, inlineToolbar: true },
+                    delimiter: Delimiter,
+                    inlineCode: InlineCode,
+                    table: Table,
+                    checklist: Checklist,
+                    marker: Marker,
+                    underline: Underline,
+                    image: {
+                        class: ImageTool as any,
+                        config: {
+                            uploader: {
+                                async uploadByFile(file: File) {
+                                    const { url } = await api.uploadFile(file);
+                                    return {
+                                        success: 1,
+                                        file: { url: url.startsWith('http') ? url : `${api.baseUrl}${url}` }
+                                    };
+                                }
+                            }
+                        }
+                    }
+                },
+                placeholder: 'Bắt đầu viết nội dung tuyệt vời của bạn tại đây...',
+            });
+            editorInstance.current = editor;
+        };
+
+        initEditor();
 
         return () => {
             if (editorInstance.current) {
@@ -114,7 +132,7 @@ const AdminBlogEditor: React.FC = () => {
                 editorInstance.current = null;
             }
         };
-    }, [id]);
+    }, [isDataLoaded]);
 
     const generateSlug = (text: string) => {
         return text
