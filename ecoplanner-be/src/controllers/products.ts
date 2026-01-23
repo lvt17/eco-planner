@@ -13,7 +13,15 @@ router.get('/', async (req: Request, res: Response) => {
             where: {
                 isActive: true,
                 ...(tag && { tags: { has: tag as string } }),
-                ...(search && { OR: [{ name: { contains: search as string, mode: 'insensitive' } }, { description: { contains: search as string, mode: 'insensitive' } }] }),
+                ...(search && {
+                    AND: (search as string).split(/\s+/).filter(Boolean).map(word => ({
+                        OR: [
+                            { name: { contains: word, mode: 'insensitive' } },
+                            { description: { contains: word, mode: 'insensitive' } },
+                            { descriptionAi: { contains: word, mode: 'insensitive' } }
+                        ]
+                    }))
+                }),
             },
             take: parseInt(limit as string),
             skip: parseInt(offset as string),
