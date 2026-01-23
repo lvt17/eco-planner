@@ -52,7 +52,7 @@ const Blog: React.FC = () => {
                </article>
             );
          case 'TIP':
-            const tipContent = typeof post.content === 'string' ? post.content : (post.content.find(b => b.type === 'tip')?.content || '');
+            const tipContent = post.excerpt || (post.content.blocks?.find((b: any) => b.type === 'quote')?.data?.text || '');
             return (
                <article
                   key={post.id}
@@ -86,7 +86,7 @@ const Blog: React.FC = () => {
                </article>
             );
          default: // ARTICLE
-            const previewText = post.excerpt || (Array.isArray(post.content) ? post.content.find(b => b.type === 'text')?.content : '');
+            const previewText = post.excerpt || (post.content.blocks?.find((b: any) => b.type === 'paragraph')?.data?.text || '');
             return (
                <article
                   key={post.id}

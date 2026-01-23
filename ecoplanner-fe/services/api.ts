@@ -304,24 +304,22 @@ export interface UserOrder {
 }
 
 export interface BlogBlock {
-    type: 'text' | 'quote' | 'tip' | 'podcast' | 'product' | 'image' | 'heading';
-    content: string;
-    alt?: string;
-    caption?: string;
-    styles?: {
-        backgroundColor?: string;
-        fontFamily?: 'serif' | 'sans';
-        accentColor?: string;
-        icon?: string;
-    };
-    productId?: string;
+    id?: string;
+    type: string;
+    data: any;
+}
+
+export interface EditorJsOutput {
+    time: number;
+    blocks: BlogBlock[];
+    version: string;
 }
 
 export interface BlogPost {
     id: string;
     title: string;
     slug: string;
-    content: BlogBlock[];
+    content: EditorJsOutput;
     excerpt?: string;
     image?: string;
     type: 'ARTICLE' | 'QUOTE' | 'TIP' | 'PODCAST';

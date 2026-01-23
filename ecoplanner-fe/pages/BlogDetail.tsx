@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, ShoppingBag, Loader2, Play, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Clock, ShoppingBag, Loader2, Play, Lightbulb, Plus } from 'lucide-react';
 import { api, BlogPost, Product, BlogBlock } from '../services/api';
 
 const slugify = (text: string) => {
@@ -43,112 +43,100 @@ const applyAutolinks = (text: string, keywords: Record<string, string>) => {
     return result;
 };
 
-const BlockRenderer: React.FC<{ block: BlogBlock, products?: Product[], keywords?: Record<string, string> }> = ({ block, products, keywords }) => {
-    switch (block.type) {
-        case 'heading':
-            const id = slugify(block.content);
-            return <h2 id={id} className="text-3xl md:text-4xl font-black text-charcoal mt-16 mb-8 scroll-mt-24">{block.content}</h2>;
+const BlockRenderer: React.FC<{ block: any, products?: Product[], keywords?: Record<string, string> }> = ({ block, products, keywords }) => {
+    const { type, data } = block;
+
+    switch (type) {
+        case 'header':
+            const id = slugify(data.text);
+            const Tag = `h${data.level || 2}` as any;
+            const className = data.level === 1 ? "text-4xl md:text-6xl font-black text-charcoal mb-12" :
+                data.level === 2 ? "text-3xl md:text-4xl font-black text-charcoal mt-16 mb-8 scroll-mt-24" :
+                    "text-2xl font-black text-charcoal mt-12 mb-6 scroll-mt-24";
+            return <Tag id={id} className={className} dangerouslySetInnerHTML={{ __html: data.text }} />;
+
+        case 'paragraph':
+            const processedText = keywords ? applyAutolinks(data.text, keywords) : data.text;
+            return <p className="mb-8 text-xl text-charcoal/80 leading-[1.8] font-medium" dangerouslySetInnerHTML={{ __html: processedText }} />;
+
+        case 'list':
+            const ListTag = data.style === 'ordered' ? 'ol' : 'ul';
+            return (
+                <ListTag className={`mb-8 ml-6 space-y-3 ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
+                    {data.items.map((item: string, i: number) => (
+                        <li key={i} className="text-xl text-charcoal/80 leading-relaxed pl-2" dangerouslySetInnerHTML={{ __html: item }} />
+                    ))}
+                </ListTag>
+            );
+
         case 'image':
             return (
                 <figure className="my-12 group">
                     <div className="rounded-[2.5rem] overflow-hidden shadow-xl ring-1 ring-black/5">
                         <img
-                            src={block.content.startsWith('http') ? block.content : `${api.baseUrl}${block.content}`}
+                            src={data.file.url}
                             className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-1000"
-                            alt={block.alt || 'Blog image'}
+                            alt={data.caption || 'Blog image'}
                             loading="lazy"
                         />
                     </div>
-                    {block.caption && (
-                        <figcaption className="text-center mt-4 text-sm text-charcoal/50 italic font-medium px-4">
-                            {block.caption}
-                        </figcaption>
+                    {data.caption && (
+                        <figcaption className="text-center mt-4 text-sm text-charcoal/50 italic font-medium px-4" dangerouslySetInnerHTML={{ __html: data.caption }} />
                     )}
                 </figure>
             );
+
         case 'quote':
             return (
-                <div
-                    className="my-12 p-12 rounded-[2.5rem] border border-primary/10 relative overflow-hidden group"
-                    style={{
-                        backgroundColor: block.styles?.backgroundColor || 'transparent',
-                    }}
-                >
+                <div className="my-12 p-12 rounded-[2.5rem] bg-stone-50 border border-stone-200 relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-2 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                    <span className="text-8xl text-primary/10 absolute -top-4 -left-2 font-serif select-none">"</span>
-                    <blockquote className="text-2xl md:text-3xl font-black text-charcoal italic leading-tight relative z-10 pr-4">
-                        {block.content}
-                    </blockquote>
+                    <span className="text-8xl text-stone-200 absolute -top-4 -left-2 font-serif select-none">"</span>
+                    <blockquote className="text-2xl md:text-3xl font-black text-charcoal italic leading-tight relative z-10 pr-4" dangerouslySetInnerHTML={{ __html: data.text }} />
+                    {data.caption && <cite className="block mt-6 text-sm font-bold text-stone-400 uppercase tracking-widest">— {data.caption}</cite>}
                 </div>
             );
-        case 'tip':
+
+        case 'delimiter':
+            return <hr className="my-16 border-t-2 border-dashed border-stone-200 w-24 mx-auto" />;
+
+        case 'table':
             return (
-                <div
-                    className="my-10 p-8 rounded-3xl text-white shadow-xl flex gap-5 items-start"
-                    style={{ backgroundColor: block.styles?.backgroundColor || '#e28d68' }}
-                >
-                    <div className="bg-white/20 p-3 rounded-2xl shrink-0">
-                        <Lightbulb className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <span className="font-black text-xs uppercase tracking-[0.2em] opacity-80 mb-2 block">Mẹo từ chuyên gia</span>
-                        <p className="text-xl font-bold leading-relaxed">{block.content}</p>
-                    </div>
+                <div className="my-10 overflow-x-auto rounded-3xl border border-stone-200 shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                        <tbody>
+                            {data.content.map((row: string[], i: number) => (
+                                <tr key={i} className={i === 0 ? "bg-stone-50" : "border-t border-stone-100"}>
+                                    {row.map((cell: string, j: number) => (
+                                        <td key={j} className={`p-4 text-lg ${i === 0 ? "font-black text-charcoal" : "text-charcoal/70"}`} dangerouslySetInnerHTML={{ __html: cell }} />
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             );
-        case 'podcast':
+
+        case 'checklist':
             return (
-                <div className="my-10 p-8 rounded-3xl bg-white border border-stone-100 shadow-sm flex items-center gap-6 group hover:shadow-xl transition-all">
-                    <div className="size-16 items-center justify-center rounded-2xl bg-primary text-white flex shrink-0 shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="w-6 h-6 fill-current ml-1" />
-                    </div>
-                    <div>
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1 block">Nghe bản tin Podcast</span>
-                        <h4 className="text-2xl font-black text-charcoal">{block.content}</h4>
-                    </div>
-                </div>
-            );
-        case 'product':
-            const linkedProduct = products?.find(p => p.id === block.productId);
-            if (!linkedProduct) return null;
-            return (
-                <div className="my-12">
-                    <Link
-                        to={`/product/${linkedProduct.id}`}
-                        className="flex flex-col md:flex-row items-center gap-8 p-8 rounded-[2.5rem] bg-white border border-stone-100 hover:border-primary/30 transition-all hover:shadow-2xl group relative overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 p-4 bg-primary/5 rounded-bl-3xl">
-                            <ShoppingBag className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="w-full md:w-48 h-48 rounded-[2rem] overflow-hidden shrink-0 shadow-md">
-                            <img
-                                src={linkedProduct.image?.startsWith('http') ? linkedProduct.image : `${api.baseUrl}${linkedProduct.image}`}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                                alt={linkedProduct.name}
-                                onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400?text=Product'; }}
-                            />
-                        </div>
-                        <div className="flex-1 text-center md:text-left">
-                            <span className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-3 block">Sản phẩm nổi bật</span>
-                            <h4 className="text-2xl font-black text-charcoal mb-4 group-hover:text-primary transition-colors leading-tight">{linkedProduct.name}</h4>
-                            <div className="flex items-center justify-center md:justify-start gap-3">
-                                <p className="text-3xl font-black text-charcoal">
-                                    {linkedProduct.price.toLocaleString('vi-VN')}đ
-                                </p>
-                                <button className="ml-4 bg-primary text-white px-6 py-2 rounded-full text-sm font-black shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Mua ngay</button>
+                <div className="mb-8 space-y-4">
+                    {data.items.map((item: any, i: number) => (
+                        <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-stone-100 shadow-sm">
+                            <div className={`mt-1 size-6 rounded-lg border-2 flex items-center justify-center shrink-0 ${item.checked ? 'bg-primary border-primary text-white' : 'border-stone-200'}`}>
+                                {item.checked && <Plus className="w-4 h-4 rotate-45" />} { /* Placeholder for checkmark */}
                             </div>
+                            <span className={`text-xl font-medium ${item.checked ? 'text-charcoal/40 line-through' : 'text-charcoal/80'}`} dangerouslySetInnerHTML={{ __html: item.text }} />
                         </div>
-                    </Link>
+                    ))}
                 </div>
             );
-        default: // text
-            const processedText = keywords ? applyAutolinks(block.content, keywords) : block.content;
-            return <p className="mb-8 text-xl text-charcoal/80 leading-[1.8] font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: processedText }} />;
+
+        default:
+            return null;
     }
 };
 
-const TableOfContents: React.FC<{ blocks: BlogBlock[] }> = ({ blocks }) => {
-    const headings = blocks.filter(b => b.type === 'heading');
+const TableOfContents: React.FC<{ blocks: any[] }> = ({ blocks }) => {
+    const headings = blocks.filter(b => b.type === 'header');
     if (headings.length < 2) return null;
 
     return (
@@ -162,15 +150,15 @@ const TableOfContents: React.FC<{ blocks: BlogBlock[] }> = ({ blocks }) => {
                 {headings.map((h, i) => (
                     <a
                         key={i}
-                        href={`#${slugify(h.content)}`}
+                        href={`#${slugify(h.data.text)}`}
                         className="flex items-start gap-4 text-charcoal/60 hover:text-primary transition-all group py-1"
                         onClick={(e) => {
                             e.preventDefault();
-                            document.getElementById(slugify(h.content))?.scrollIntoView({ behavior: 'smooth' });
+                            document.getElementById(slugify(h.data.text))?.scrollIntoView({ behavior: 'smooth' });
                         }}
                     >
                         <span className="text-[10px] font-black mt-1.5 opacity-20 group-hover:opacity-100 transition-opacity">{(i + 1).toString().padStart(2, '0')}</span>
-                        <span className="font-bold text-lg leading-tight border-b border-transparent group-hover:border-primary/20">{h.content}</span>
+                        <span className="font-bold text-lg leading-tight border-b border-transparent group-hover:border-primary/20" dangerouslySetInnerHTML={{ __html: h.data.text }} />
                     </a>
                 ))}
             </nav>
@@ -265,9 +253,9 @@ const BlogDetail: React.FC = () => {
             {/* Main Content */}
             <article className="max-w-[750px] mx-auto px-6">
                 <div className="content-renderer">
-                    <TableOfContents blocks={post.content} />
+                    <TableOfContents blocks={post.content.blocks || []} />
 
-                    {post.content.map((block, index) => (
+                    {(post.content.blocks || []).map((block: any, index: number) => (
                         <BlockRenderer
                             key={index}
                             block={block}
