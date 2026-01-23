@@ -72,7 +72,7 @@ const Home: React.FC = () => {
           {/* Card 2 */}
           <div className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-[#E8E6E1] cursor-pointer">
             <div className="absolute inset-0 p-8 flex items-center justify-center">
-              <img src="https://images.unsplash.com/photo-1558244661-d248b97f0752?q=80&w=1000&auto=format&fit=crop" className="w-[80%] h-auto object-contain transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110" alt="Stickers" />
+              <img src="/sticker-category.png" className="w-[80%] h-auto object-contain transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110" alt="Stickers" />
             </div>
             <div className="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black/20 to-transparent">
               <h3 className="text-xl font-bold font-display text-charcoal mb-1">Sticker Trang Trí</h3>
