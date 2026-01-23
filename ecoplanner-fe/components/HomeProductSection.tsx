@@ -18,14 +18,19 @@ const HomeProductSection: React.FC = () => {
                 const data = await api.getProducts();
                 setProducts(data);
 
-                // Extract categories from tags
-                const tags = data.reduce((acc: string[], curr) => {
-                    curr.tags.forEach(tag => {
-                        if (!acc.includes(tag)) acc.push(tag);
+                // Extract categories from tags, but only keep the top most frequent ones to avoid cluttering the UI
+                const tagCounts: { [key: string]: number } = {};
+                data.forEach(p => {
+                    p.tags.forEach(tag => {
+                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
                     });
-                    return acc;
-                }, []);
-                setCategories(['Tất cả', ...tags]);
+                });
+
+                const sortedTags = Object.keys(tagCounts)
+                    .sort((a, b) => tagCounts[b] - tagCounts[a])
+                    .slice(0, 10); // Show top 10 tags
+
+                setCategories(['Tất cả', ...sortedTags]);
             } catch (error) {
                 console.error('Failed to fetch products', error);
             } finally {
@@ -54,14 +59,14 @@ const HomeProductSection: React.FC = () => {
                 </div>
 
                 {/* Categories Filter */}
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="flex flex-nowrap items-center gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 w-full md:w-auto">
                     {categories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
                             className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-2 ${selectedCategory === cat
-                                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105'
-                                    : 'bg-white border-stone-100 text-charcoal/60 hover:border-primary/30 hover:text-primary'
+                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105'
+                                : 'bg-white border-stone-100 text-charcoal/60 hover:border-primary/30 hover:text-primary'
                                 }`}
                         >
                             {cat}
