@@ -8,10 +8,11 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const { tag, search, limit = '20', offset = '0' } = req.query;
+        const { tag, search, categoryId, limit = '20', offset = '0' } = req.query;
         const products = await prisma.product.findMany({
             where: {
                 isActive: true,
+                ...(categoryId && { categoryId: categoryId as string }),
                 ...(tag && { tags: { has: tag as string } }),
                 ...(search && {
                     AND: (search as string).split(/\s+/).filter(Boolean).map(word => ({
