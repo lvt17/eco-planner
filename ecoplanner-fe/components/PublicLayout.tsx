@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, NavLink } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, Leaf, Send, Sparkles, X, LogIn, Instagram, Facebook, Phone } from 'lucide-react';
+import { Outlet, Link, NavLink, useLocation } from 'react-router-dom';
+import { Search, ShoppingBag, User, Menu, Leaf, Send, Sparkles, X, LogIn, Instagram, Facebook, Phone, Home, Package, BookOpen, Info, Settings, ClipboardList, LogOut } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../hooks/useChat';
@@ -13,11 +13,18 @@ const parseMarkdown = (text: string) => {
 
 const PublicLayout: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const { totalItems } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { messages, sendMessage, isLoading: chatLoading, error: chatError } = useChat();
+  const location = useLocation();
+
+  // Close menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -55,35 +62,46 @@ const PublicLayout: React.FC = () => {
     }
   };
 
+  const navItems = [
+    { to: '/', label: 'Trang chủ', icon: Home },
+    { to: '/shop', label: 'Sản phẩm', icon: Package },
+    { to: '/blog', label: 'Blog', icon: BookOpen },
+    { to: '/about', label: 'Về chúng tôi', icon: Info },
+  ];
+
+  const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-primary/10 text-primary font-bold' : 'text-charcoal/70 hover:bg-stone-100'}`;
+
   return (
     <div className="min-h-screen flex flex-col bg-paper text-charcoal font-sans selection:bg-primary/20">
       {/* Header */}
       <header className="sticky top-0 z-40 w-full bg-paper/80 backdrop-blur-md border-b border-stone-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <Leaf className="w-8 h-8 text-primary group-hover:rotate-12 transition-transform duration-300" />
-            <span className="font-display font-bold text-2xl tracking-tight text-charcoal">MEDE</span>
+            <Leaf className="w-7 h-7 md:w-8 md:h-8 text-primary group-hover:rotate-12 transition-transform duration-300" />
+            <span className="font-display font-bold text-xl md:text-2xl tracking-tight text-charcoal">MEDE</span>
           </Link>
 
-          {/* Nav */}
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {['Home', 'Shop', 'Blog', 'About'].map((item) => (
+            {navItems.map((item) => (
               <NavLink
-                key={item}
-                to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
                 className={({ isActive }) =>
                   `text-sm font-semibold transition-colors ${isActive ? 'text-primary' : 'text-charcoal/70 hover:text-primary'}`
                 }
               >
-                {item === 'Home' ? 'Trang chủ' : item === 'Shop' ? 'Sản phẩm' : item === 'About' ? 'Về chúng tôi' : item}
+                {item.label}
               </NavLink>
             ))}
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-primary/10 rounded-full transition-colors text-charcoal">
+          <div className="flex items-center gap-1 md:gap-2">
+            <button className="hidden sm:flex p-2 hover:bg-primary/10 rounded-full transition-colors text-charcoal">
               <Search className="w-5 h-5" />
             </button>
 
@@ -97,9 +115,9 @@ const PublicLayout: React.FC = () => {
               )}
             </Link>
 
-            {/* User */}
+            {/* Desktop User */}
             {isAuthenticated ? (
-              <Link to="/profile" className="hidden sm:flex items-center gap-2 p-2 hover:bg-primary/10 rounded-full transition-colors">
+              <Link to="/profile" className="hidden md:flex items-center gap-2 p-2 hover:bg-primary/10 rounded-full transition-colors">
                 <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-primary" />
                 </div>
@@ -108,17 +126,144 @@ const PublicLayout: React.FC = () => {
                 </span>
               </Link>
             ) : (
-              <Link to="/login" className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-colors">
+              <Link to="/login" className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-colors">
                 <LogIn className="w-4 h-4" /> Đăng nhập
               </Link>
             )}
 
-            <button className="md:hidden p-2 hover:bg-primary/10 rounded-full transition-colors text-charcoal">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="md:hidden p-2 hover:bg-primary/10 rounded-full transition-colors text-charcoal"
+            >
               <Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Drawer Overlay */}
+      {isMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Drawer */}
+      <aside
+        className={`md:hidden fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white z-50 flex flex-col shadow-2xl transform transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+      >
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between p-4 border-b border-stone-100">
+          <div className="flex items-center gap-2">
+            <Leaf className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-lg text-charcoal">Menu</span>
+          </div>
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="p-2 hover:bg-stone-100 rounded-full text-charcoal/70 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* User Info */}
+        {isAuthenticated ? (
+          <div className="p-4 bg-stone-50 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-charcoal truncate">{user?.name}</p>
+                <p className="text-xs text-charcoal/60 truncate">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 border-b border-stone-100">
+            <Link
+              to="/login"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors"
+            >
+              <LogIn className="w-5 h-5" /> Đăng nhập
+            </Link>
+          </div>
+        )}
+
+        {/* Nav Links */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={mobileNavLinkClass}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+
+          {isAuthenticated && (
+            <>
+              <div className="pt-4 pb-2 px-4 text-xs font-bold text-charcoal/40 uppercase tracking-widest">Tài khoản</div>
+              <NavLink to="/profile" className={mobileNavLinkClass}>
+                <User className="w-5 h-5" />
+                <span>Hồ sơ</span>
+              </NavLink>
+              <NavLink to="/orders" className={mobileNavLinkClass}>
+                <ClipboardList className="w-5 h-5" />
+                <span>Đơn hàng</span>
+              </NavLink>
+              <NavLink to="/settings" className={mobileNavLinkClass}>
+                <Settings className="w-5 h-5" />
+                <span>Cài đặt</span>
+              </NavLink>
+            </>
+          )}
+        </nav>
+
+        {/* Drawer Footer */}
+        {isAuthenticated && (
+          <div className="p-4 border-t border-stone-100">
+            <button
+              onClick={() => {
+                logout();
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Đăng xuất</span>
+            </button>
+          </div>
+        )}
+
+        {/* Social Links */}
+        <div className="p-4 border-t border-stone-100 bg-stone-50">
+          <div className="flex items-center justify-center gap-4">
+            {settings.branding.instagram && (
+              <a href={settings.branding.instagram.startsWith('http') ? settings.branding.instagram : `https://${settings.branding.instagram}`} target="_blank" rel="noreferrer" className="p-2 text-charcoal/60 hover:text-primary transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {settings.branding.facebook && (
+              <a href={settings.branding.facebook.startsWith('http') ? settings.branding.facebook : `https://${settings.branding.facebook}`} target="_blank" rel="noreferrer" className="p-2 text-charcoal/60 hover:text-primary transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
+            {settings.branding.hotline && (
+              <a href={`tel:${settings.branding.hotline}`} className="p-2 text-charcoal/60 hover:text-primary transition-colors">
+                <Phone className="w-5 h-5" />
+              </a>
+            )}
+          </div>
+        </div>
+      </aside>
 
       {/* Main Content */}
       <main className="flex-grow">
@@ -126,20 +271,20 @@ const PublicLayout: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white/50 border-t border-stone-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+      <footer className="bg-white/50 border-t border-stone-200 py-8 md:py-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
           <div className="flex items-center gap-2">
             <Leaf className="w-6 h-6 text-primary" />
             <span className="font-bold font-display text-charcoal">MEDE</span>
           </div>
-          <p className="text-sm text-charcoal/60">© 2026 MEDE. Designed for balance.</p>
-          <div className="flex gap-4">
+          <p className="text-sm text-charcoal/60 text-center">© 2026 MEDE. Designed for balance.</p>
+          <div className="flex gap-4 flex-wrap justify-center">
             {settings.branding.instagram && (
               <a
                 href={settings.branding.instagram.startsWith('http') ? settings.branding.instagram : `https://${settings.branding.instagram}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1"
+                className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1 text-sm"
               >
                 <Instagram className="w-4 h-4" /> Instagram
               </a>
@@ -149,13 +294,13 @@ const PublicLayout: React.FC = () => {
                 href={settings.branding.facebook.startsWith('http') ? settings.branding.facebook : `https://${settings.branding.facebook}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1"
+                className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1 text-sm"
               >
                 <Facebook className="w-4 h-4" /> Facebook
               </a>
             )}
             {settings.branding.hotline && (
-              <a href={`tel:${settings.branding.hotline}`} className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1">
+              <a href={`tel:${settings.branding.hotline}`} className="text-charcoal/60 hover:text-primary transition-colors flex items-center gap-1 text-sm">
                 <Phone className="w-4 h-4" /> {settings.branding.hotline}
               </a>
             )}
@@ -168,18 +313,18 @@ const PublicLayout: React.FC = () => {
         {!isChatOpen && (
           <button
             onClick={() => setIsChatOpen(true)}
-            className="flex items-center gap-2 bg-white px-5 py-3 rounded-full shadow-lg hover:scale-105 transition-transform border border-primary/10 group"
+            className="flex items-center gap-2 bg-white px-4 md:px-5 py-2.5 md:py-3 rounded-full shadow-lg hover:scale-105 transition-transform border border-primary/10 group"
           >
             <div className="relative">
               <div className="w-3 h-3 bg-green-500 rounded-full absolute -top-1 -right-1 border-2 border-white"></div>
               <Sparkles className="w-5 h-5 text-primary group-hover:animate-pulse" />
             </div>
-            <span className="font-bold text-sm text-charcoal">MEDE-Assistant</span>
+            <span className="font-bold text-sm text-charcoal hidden sm:inline">MEDE-Assistant</span>
           </button>
         )}
 
         {isChatOpen && (
-          <div className="w-[350px] bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="w-[calc(100vw-48px)] sm:w-[350px] max-w-[350px] bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
             <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-white/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center text-white">
@@ -195,7 +340,7 @@ const PublicLayout: React.FC = () => {
               </button>
             </div>
 
-            <div className="h-80 overflow-y-auto p-4 space-y-4 bg-stone-50/50">
+            <div className="h-64 sm:h-80 overflow-y-auto p-4 space-y-4 bg-stone-50/50">
               {messages.length === 0 ? (
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
