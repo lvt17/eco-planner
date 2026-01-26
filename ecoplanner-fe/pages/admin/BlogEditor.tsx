@@ -416,9 +416,9 @@ const AdminBlogEditor: React.FC = () => {
 
             {/* Product Search Selector */}
             {showProductSearch && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/40 backdrop-blur-md">
-                    <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
-                        <div className="p-8 border-b border-stone-100 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                        <div className="p-4 md:p-6 border-b border-stone-100 space-y-4">
                             <h3 className="text-2xl font-black text-charcoal">Gắn sản phẩm liên quan</h3>
                             <div className="relative">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
