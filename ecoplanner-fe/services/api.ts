@@ -104,6 +104,12 @@ class ApiClient {
         );
     }
 
+    async sendFaqMessage(question: string, answer: string) {
+        return this.request<{ conversationId: string; message: Message }>(
+            '/api/chat/send-faq', { method: 'POST', body: JSON.stringify({ question, answer }) }
+        );
+    }
+
     async getChatHistory(conversationId: string) {
         return this.request<Message[]>(`/api/chat/history/${conversationId}`);
     }

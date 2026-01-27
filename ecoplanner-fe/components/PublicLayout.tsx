@@ -129,7 +129,7 @@ const PublicLayout: React.FC = () => {
     }
   };
 
-  const handleFaqClick = (faq: typeof faqQuestions[0]) => {
+  const handleFaqClick = async (faq: typeof faqQuestions[0]) => {
     // Add question and answer to local FAQ messages instantly
     setFaqMessages(prev => [
       ...prev,
@@ -137,6 +137,15 @@ const PublicLayout: React.FC = () => {
       { content: faq.answer, sender: 'AI' }
     ]);
     setShowFaq(false);
+
+    // Save to history if authenticated
+    if (isAuthenticated) {
+      try {
+        await api.sendFaqMessage(faq.question, faq.answer);
+      } catch (error) {
+        console.error('Failed to save FAQ to history:', error);
+      }
+    }
   };
 
   const navItems = [

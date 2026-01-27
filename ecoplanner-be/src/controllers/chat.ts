@@ -17,6 +17,20 @@ router.post('/send', authMiddleware, async (req: AuthenticatedRequest, res: Resp
     }
 });
 
+// FAQ endpoint - saves both question and pre-defined answer
+router.post('/send-faq', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { question, answer } = req.body;
+        if (!question || !answer) return res.status(400).json({ error: 'Question and answer are required' });
+        const conversation = await chatService.getOrCreateConversation(req.user!.userId);
+        await chatService.sendMessage(conversation.id, question, 'USER');
+        const faqMessage = await chatService.sendMessage(conversation.id, answer, 'AI');
+        res.json({ conversationId: conversation.id, message: faqMessage });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save FAQ' });
+    }
+});
+
 router.get('/history/:conversationId', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const messages = await chatService.getConversationHistory(req.params.conversationId);
