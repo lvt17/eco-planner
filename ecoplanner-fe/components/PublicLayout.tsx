@@ -6,9 +6,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../hooks/useChat';
 import { api, SystemSettings, DEFAULT_SETTINGS } from '../services/api';
 
-// Parse markdown bold (**text**) to HTML
+// Parse markdown to HTML (bold, line breaks, bullets)
 const parseMarkdown = (text: string) => {
-  return text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold
+    .replace(/\n/g, '<br/>'); // Line breaks
 };
 
 // FAQ Questions data
@@ -77,11 +79,15 @@ const PublicLayout: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFaq, setShowFaq] = useState(true);
   const [chatInput, setChatInput] = useState('');
+  const [faqMessages, setFaqMessages] = useState<{ content: string; sender: 'USER' | 'AI' }[]>([]);
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const { totalItems } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
-  const { messages, sendMessage, isLoading: chatLoading, error: chatError } = useChat();
+  const { messages: aiMessages, sendMessage, isLoading: chatLoading, error: chatError } = useChat();
   const location = useLocation();
+
+  // Combine FAQ messages and AI messages
+  const allMessages = [...faqMessages, ...aiMessages];
 
   // Close menu when route changes
   useEffect(() => {
@@ -125,11 +131,12 @@ const PublicLayout: React.FC = () => {
   };
 
   const handleFaqClick = (faq: typeof faqQuestions[0]) => {
-    if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để chat với MEDE-Assistant');
-      return;
-    }
-    sendMessage(faq.question);
+    // Add question and answer to local FAQ messages instantly
+    setFaqMessages(prev => [
+      ...prev,
+      { content: faq.question, sender: 'USER' },
+      { content: faq.answer, sender: 'AI' }
+    ]);
     setShowFaq(false);
   };
 
@@ -412,7 +419,7 @@ const PublicLayout: React.FC = () => {
             </div>
 
             <div className="h-64 sm:h-80 overflow-y-auto p-4 space-y-4 bg-stone-50/50">
-              {messages.length === 0 ? (
+              {allMessages.length === 0 ? (
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Sparkles className="w-3 h-3 text-primary" />
@@ -422,7 +429,7 @@ const PublicLayout: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                messages.map((msg, index) => (
+                allMessages.map((msg, index) => (
                   <div key={index} className={`flex gap-3 ${msg.sender === 'USER' ? 'flex-row-reverse' : ''}`}>
                     {msg.sender !== 'USER' && (
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
