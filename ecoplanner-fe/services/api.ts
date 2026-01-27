@@ -110,6 +110,14 @@ class ApiClient {
         );
     }
 
+    // Public FAQ logging for analytics (no auth required)
+    async logFaq(question: string, answer: string, sessionId?: string) {
+        return this.request<{ success: boolean }>(
+            '/api/chat/log-faq',
+            { method: 'POST', body: JSON.stringify({ question, answer, sessionId }), skipAuth: true }
+        );
+    }
+
     async getChatHistory(conversationId: string) {
         return this.request<Message[]>(`/api/chat/history/${conversationId}`);
     }

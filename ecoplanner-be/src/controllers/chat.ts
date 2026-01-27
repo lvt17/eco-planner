@@ -31,6 +31,44 @@ router.post('/send-faq', authMiddleware, async (req: AuthenticatedRequest, res: 
     }
 });
 
+// Public FAQ logging - for analytics (no auth required)
+router.post('/log-faq', async (req: any, res: Response) => {
+    try {
+        const { question, answer, sessionId } = req.body;
+        if (!question || !answer) return res.status(400).json({ error: 'Question and answer are required' });
+
+        // Get userId if authenticated (optional)
+        const authHeader = req.headers.authorization;
+        let userId = null;
+        if (authHeader) {
+            try {
+                const jwt = require('jsonwebtoken');
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
+                userId = decoded.userId;
+            } catch { }
+        }
+
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+
+        await prisma.faqLog.create({
+            data: {
+                question,
+                answer,
+                userId,
+                sessionId,
+                userAgent: req.headers['user-agent']
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to log FAQ:', error);
+        res.status(500).json({ error: 'Failed to log FAQ' });
+    }
+});
+
 router.get('/history/:conversationId', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const messages = await chatService.getConversationHistory(req.params.conversationId);

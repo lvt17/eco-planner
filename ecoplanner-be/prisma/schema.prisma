@@ -180,3 +180,17 @@ enum BlogType {
   TIP
   PODCAST
 }
+
+// FAQ Analytics - stores all FAQ clicks for analysis
+model FaqLog {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  userId    String?  // null if anonymous
+  sessionId String?  // optional browser session ID
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([question])
+}

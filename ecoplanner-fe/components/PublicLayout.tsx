@@ -138,7 +138,14 @@ const PublicLayout: React.FC = () => {
     ]);
     setShowFaq(false);
 
-    // Save to history if authenticated
+    // Always log FAQ to database for analytics (works for all users)
+    try {
+      await api.logFaq(faq.question, faq.answer);
+    } catch (error) {
+      console.error('Failed to log FAQ:', error);
+    }
+
+    // Also save to conversation history if authenticated
     if (isAuthenticated) {
       try {
         await api.sendFaqMessage(faq.question, faq.answer);
