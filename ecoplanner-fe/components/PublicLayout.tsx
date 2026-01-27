@@ -42,7 +42,7 @@ const faqQuestions = [
 const PublicLayout: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showFaq, setShowFaq] = useState(false);
+  const [showFaq, setShowFaq] = useState(true);
   const [chatInput, setChatInput] = useState('');
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const { totalItems } = useCart();
