@@ -26,6 +26,16 @@ const faqQuestions = [
 • **A5 – Yearly Planner** (theo năm): 120 trang, lập kế hoạch năm-tháng-tuần-ngày.`
   },
   {
+    question: 'Bên trong sổ có nội dung gì?',
+    answer: `**Nội dung bên trong:**
+
+📘 **B6 (Daily):** Top 3 mục tiêu, Lịch trình, Việc cần làm (checklist), Ghi chú, Việc cho ngày mai.
+
+📗 **B5 (Weekly):** Lịch tuần Thứ 2-CN, Ưu tiên, Việc cần làm, Ghi chú, Theo dõi thói quen.
+
+📙 **A5 (Yearly):** Lịch 2026, Tầm nhìn, Kế hoạch năm/tháng/tuần/ngày, Tổng kết.`
+  },
+  {
     question: 'Thời gian giao hàng bao lâu?',
     answer: `**Thời gian giao hàng:**
 
@@ -59,18 +69,7 @@ Bìa sử dụng giấy tái chế **250gsm** nên:
 • Đủ cứng và chắc
 • Hạn chế cong/gãy
 • Phù hợp sử dụng hàng ngày
-
-Mỗi cuốn có nét riêng do bề mặt giấy tái chế tự nhiên.`
-  },
-  {
-    question: 'Bên trong sổ có nội dung gì?',
-    answer: `**Nội dung bên trong:**
-
-📘 **B6 (Daily):** Top 3 mục tiêu, Lịch trình, Việc cần làm (checklist), Ghi chú, Việc cho ngày mai.
-
-📗 **B5 (Weekly):** Lịch tuần Thứ 2-CN, Ưu tiên, Việc cần làm, Theo dõi thói quen.
-
-📙 **A5 (Yearly):** Lịch 2026, Tầm nhìn, Kế hoạch năm/tháng/tuần, Daily Plan 72 trang, Tổng kết.`
+`
   }
 ];
 
