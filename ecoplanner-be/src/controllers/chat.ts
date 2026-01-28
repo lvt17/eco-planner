@@ -49,23 +49,30 @@ router.post('/log-faq', async (req: any, res: Response) => {
             } catch { }
         }
 
+        // Use shared prisma instance from chatService
         const { PrismaClient } = require('@prisma/client');
-        const prisma = new PrismaClient();
+        const prisma = (chatService as any).prisma || new PrismaClient();
 
-        await prisma.faqLog.create({
-            data: {
-                question,
-                answer,
-                userId,
-                sessionId,
-                userAgent: req.headers['user-agent']
-            }
-        });
+        // Try to log FAQ, but don't crash if table doesn't exist yet
+        try {
+            await prisma.faqLog.create({
+                data: {
+                    question,
+                    answer,
+                    userId,
+                    sessionId,
+                    userAgent: req.headers['user-agent']
+                }
+            });
+        } catch (dbError: any) {
+            // Table might not exist yet - log but don't fail
+            console.warn('FaqLog table may not exist yet:', dbError.message);
+        }
 
         res.json({ success: true });
     } catch (error) {
         console.error('Failed to log FAQ:', error);
-        res.status(500).json({ error: 'Failed to log FAQ' });
+        res.json({ success: true }); // Don't fail the request, just log the error
     }
 });
 
