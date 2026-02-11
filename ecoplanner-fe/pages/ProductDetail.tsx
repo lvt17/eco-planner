@@ -53,15 +53,7 @@ const ProductDetail: React.FC = () => {
                         onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=1200'; }}
                      />
                   </div>
-                  {product.images && product.images.length > 0 && (
-                     <div className="grid grid-cols-3 gap-4">
-                        {product.images.slice(0, 3).map((img, i) => (
-                           <div key={i} className={`aspect-square rounded-2xl overflow-hidden bg-stone-100 cursor-pointer ${i === 0 ? 'ring-2 ring-primary ring-offset-2' : 'opacity-70 hover:opacity-100'}`}>
-                              <img src={img?.startsWith('http') ? img : `${api.baseUrl}${img}`} className="w-full h-full object-cover" alt={`${product.name} ${i + 1}`} />
-                           </div>
-                        ))}
-                     </div>
-                  )}
+                  {/* Thumbnail images removed as per user request */}
                </div>
 
                {/* Right: Info */}
