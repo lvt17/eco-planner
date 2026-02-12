@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowRight, ShieldCheck, Truck, Leaf, ArrowLeft } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { api } from '../services/api';
 
 const Cart: React.FC = () => {
     const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Cart: React.FC = () => {
                         <div key={item.product.id} className="bg-cream rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm hover:-translate-y-0.5 transition-transform">
                             <div
                                 className="w-32 h-32 rounded-xl bg-cover bg-center flex-shrink-0"
-                                style={{ backgroundImage: `url('${item.product.image || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=400'}')` }}
+                                style={{ backgroundImage: `url('${item.product.image?.startsWith('http') ? item.product.image : `${api.baseUrl}${item.product.image}` || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=400'}')` }}
                             />
                             <div className="flex-1 space-y-1">
                                 <h3 className="text-lg font-bold text-primary leading-tight">{item.product.name}</h3>

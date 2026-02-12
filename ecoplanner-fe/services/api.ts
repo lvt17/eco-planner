@@ -264,7 +264,7 @@ export interface User {
 }
 
 export interface Category {
-    id: string; name: string; slug: string; description?: string; _count?: { products: number }; createdAt: string;
+    id: string; name: string; slug: string; description?: string; image?: string; _count?: { products: number }; createdAt: string;
 }
 
 export interface Product {

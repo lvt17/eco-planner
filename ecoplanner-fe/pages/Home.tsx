@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayCircle, ArrowRight, Star, Leaf, PenTool, Sprout, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import HomeProductSection from '../components/HomeProductSection';
+import { api, Category } from '../services/api';
+
+const MEDE_LOGO = 'https://res.cloudinary.com/dzr893tqi/image/upload/v1770831070/eco-planner/products/1770831068793-logo%20MEDE_FB%20PROFILE.png';
 
 const Home: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    api.getCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
+
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-4 pb-20 space-y-24">
       {/* Hero Section */}
@@ -47,51 +56,51 @@ const Home: React.FC = () => {
       {/* Featured Products with Categories */}
       <HomeProductSection />
 
-      {/* Bento Grid */}
-      <section>
-        <div className="flex items-end justify-between mb-8 px-2">
-          <h2 className="text-3xl font-display font-bold text-charcoal">Danh mục nổi bật</h2>
-          <Link to="/shop" className="text-primary font-bold hover:underline flex items-center gap-1">Xem tất cả <ArrowRight className="w-4 h-4" /></Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[380px]">
-          {/* Card 1 */}
-          <div className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 md:col-span-1 bg-white cursor-pointer">
-            <div className="absolute inset-0">
-              <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Planner" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-            </div>
-            <div className="absolute bottom-0 w-full p-8">
-              <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold mb-3 inline-block border border-white/20">Best Seller</span>
-              <h3 className="text-2xl font-bold font-display text-white mb-2">Sổ Planner</h3>
-              <p className="text-white/80 text-sm line-clamp-2">Lên kế hoạch chi tiết cho từng ngày với thiết kế tối giản.</p>
-            </div>
+      {/* Dynamic Categories from Database */}
+      {categories.length > 0 && (
+        <section>
+          <div className="flex items-end justify-between mb-8 px-2">
+            <h2 className="text-3xl font-display font-bold text-charcoal">Danh mục nổi bật</h2>
+            <Link to="/shop" className="text-primary font-bold hover:underline flex items-center gap-1">Xem tất cả <ArrowRight className="w-4 h-4" /></Link>
           </div>
-          {/* Card 2 */}
-          <div className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-[#E8E6E1] cursor-pointer">
-            <div className="absolute inset-0 p-8 flex items-center justify-center">
-              <img src="/sticker-category.png" className="w-[80%] h-auto object-contain transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110" alt="Stickers" />
-            </div>
-            <div className="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black/20 to-transparent">
-              <h3 className="text-xl font-bold font-display text-charcoal mb-1">Sticker Trang Trí</h3>
-              <p className="text-charcoal/70 text-sm">Thêm màu sắc cho trang viết.</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[380px]">
+            {categories.slice(0, 3).map((cat, idx) => (
+              <Link
+                key={cat.id}
+                to={`/shop?category=${cat.slug}`}
+                className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-white cursor-pointer block"
+              >
+                <div className="absolute inset-0">
+                  <img
+                    src={cat.image || MEDE_LOGO}
+                    className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${cat.image ? 'object-cover' : 'object-contain p-12 bg-stone-50'}`}
+                    alt={cat.name}
+                    onError={(e) => { (e.target as HTMLImageElement).src = MEDE_LOGO; (e.target as HTMLImageElement).className = 'w-full h-full object-contain p-12 bg-stone-50 transition-transform duration-700 group-hover:scale-110'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                </div>
+                {idx === 0 && (
+                  <div className="absolute top-6 left-6">
+                    <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold border border-white/20">Best Seller</span>
+                  </div>
+                )}
+                {idx === categories.slice(0, 3).length - 1 && (
+                  <div className="absolute top-6 right-6">
+                    <span className="bg-white text-charcoal px-3 py-1 rounded-full text-xs font-bold">New</span>
+                  </div>
+                )}
+                <div className="absolute bottom-0 w-full p-8">
+                  <h3 className="text-2xl font-bold font-display text-white mb-2">{cat.name}</h3>
+                  {cat.description && <p className="text-white/80 text-sm line-clamp-2">{cat.description}</p>}
+                  {cat._count?.products !== undefined && (
+                    <span className="text-white/60 text-xs mt-2 inline-block">{cat._count.products} sản phẩm</span>
+                  )}
+                </div>
+              </Link>
+            ))}
           </div>
-          {/* Card 3 */}
-          <div className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-[#D8D3C9] cursor-pointer">
-            <div className="absolute inset-0">
-              <img src="https://images.unsplash.com/photo-1585336261022-680e295ce3fe?q=80&w=1000&auto=format&fit=crop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Pens" />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
-            </div>
-            <div className="absolute top-6 right-6">
-              <span className="bg-white text-charcoal px-3 py-1 rounded-full text-xs font-bold">New</span>
-            </div>
-            <div className="absolute bottom-0 left-0 p-6">
-              <h3 className="text-xl font-bold font-display text-white drop-shadow-md">Bút & Phụ Kiện</h3>
-              <p className="text-white/90 text-sm drop-shadow-md">Dụng cụ viết êm ái, bền bỉ.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Value Props */}
       <section className="bg-white rounded-[2.5rem] p-8 lg:p-12 shadow-sm border border-stone-100/50">

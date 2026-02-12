@@ -149,7 +149,7 @@ const Orders: React.FC = () => {
                                             <div key={item.id} className="flex items-center gap-4">
                                                 <div
                                                     className="w-16 h-16 rounded-xl bg-cream overflow-hidden flex-shrink-0 bg-cover bg-center border border-primary/5"
-                                                    style={{ backgroundImage: `url('${item.product.image}')` }}
+                                                    style={{ backgroundImage: `url('${item.product.image?.startsWith('http') ? item.product.image : `${api.baseUrl}${item.product.image}`}')` }}
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-bold text-primary truncate">{item.product.name}</p>

@@ -9,12 +9,14 @@ const createCategorySchema = z.object({
     name: z.string().min(2),
     slug: z.string().min(2),
     description: z.string().optional(),
+    image: z.string().optional(),
 });
 
 const updateCategorySchema = z.object({
     name: z.string().min(2).optional(),
     slug: z.string().min(2).optional(),
     description: z.string().optional(),
+    image: z.string().nullable().optional(),
 });
 
 // Get all categories
